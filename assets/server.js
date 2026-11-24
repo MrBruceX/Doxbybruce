@@ -14,7 +14,7 @@ const { pool, initSchema } = require('./db');
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PORT          = process.env.PORT || 3000;
-const JWT_SECRET    = process.env.JWT_SECRET;          // FILL: set in Render env
+const JWT_SECRET    = process.env.JWT_SECRET;
 const BCRYPT_ROUNDS = 12;
 const TIER_LIMITS   = { weekly: 10, monthly: 15, lifetime: 25 };
 const SERVICE_TYPES = ['discord', 'steam', 'rockstar', 'rockstar_code'];
@@ -29,13 +29,12 @@ if (!JWT_SECRET) { console.error('[fatal] JWT_SECRET env var missing'); process.
 // ── App setup ─────────────────────────────────────────────────────────────────
 const app = express();
 
-app.set('trust proxy', 1); // Render sits behind a proxy
+app.set('trust proxy', 1);
 
 app.use(helmet({
-  contentSecurityPolicy: false, // handled per-page in HTML
+  contentSecurityPolicy: false,
 }));
 
-// CORS — lock to your actual frontend origin in production
 const ALLOWED_ORIGIN = process.env.FRONTEND_ORIGIN || '*';
 app.use(cors({
   origin: ALLOWED_ORIGIN,
@@ -43,11 +42,13 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static('public')); // serve frontend files from /public
+// FIX: was express.static('public') — relative string resolves wrong on Render
+// __dirname is /opt/render/project/src, public/ sits there, so join explicitly
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Rate limiters ─────────────────────────────────────────────────────────────
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
+  windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
@@ -70,7 +71,7 @@ const uploadLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-// ── Multer (guide media uploads, stored in memory then written to DB as bytea) ─
+// ── Multer ────────────────────────────────────────────────────────────────────
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 },
@@ -115,7 +116,6 @@ function genKeyStr() {
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
-// ── POST /api/setup  — first-run owner key setup ──────────────────────────────
 app.post('/api/setup', async (req, res) => {
   try {
     const { key } = req.body;
@@ -139,7 +139,6 @@ app.post('/api/setup', async (req, res) => {
   }
 });
 
-// ── GET /api/setup/status ─────────────────────────────────────────────────────
 app.get('/api/setup/status', async (req, res) => {
   try {
     const r = await pool.query(`SELECT 1 FROM owner_config WHERE key='owner_hash'`);
@@ -149,7 +148,6 @@ app.get('/api/setup/status', async (req, res) => {
   }
 });
 
-// ── POST /api/login ───────────────────────────────────────────────────────────
 app.post('/api/login', loginLimiter, async (req, res) => {
   try {
     let { key, discordId } = req.body;
@@ -160,7 +158,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     if (discordId && !/^\d{15,20}$/.test(discordId))
       return res.status(400).json({ error: 'invalid_discord' });
 
-    // Owner check
     const ownerRow = await pool.query(
       `SELECT value FROM owner_config WHERE key='owner_hash'`
     );
@@ -175,7 +172,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
       }
     }
 
-    // License key check — keys stored as bcrypt hashes
     const keysRes = await pool.query(
       `SELECT id, key_hash, tier, discord_id_preset, locked_discord,
               rockstar_code_access, revoked
@@ -195,7 +191,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     if (matched.locked_discord && matched.locked_discord !== discordId)
       return res.status(401).json({ error: 'discord_mismatch' });
 
-    // Lock discord on first use
     if (!matched.discord_id_preset && !matched.locked_discord && discordId) {
       await pool.query(
         `UPDATE license_keys SET locked_discord=$1 WHERE id=$2`,
@@ -219,7 +214,6 @@ app.post('/api/login', loginLimiter, async (req, res) => {
   }
 });
 
-// ── GET /api/stock/counts ─────────────────────────────────────────────────────
 app.get('/api/stock/counts', authMiddleware, async (req, res) => {
   try {
     const r = await pool.query(
@@ -234,7 +228,6 @@ app.get('/api/stock/counts', authMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/stock/generate ──────────────────────────────────────────────────
 app.post('/api/stock/generate', authMiddleware, async (req, res) => {
   const client = await pool.connect();
   try {
@@ -248,7 +241,6 @@ app.post('/api/stock/generate', authMiddleware, async (req, res) => {
 
     await client.query('BEGIN');
 
-    // Daily usage — upsert then read
     await client.query(
       `INSERT INTO daily_usage(discord_id, date, count)
        VALUES($1, CURRENT_DATE, 0)
@@ -267,7 +259,6 @@ app.post('/api/stock/generate', authMiddleware, async (req, res) => {
 
     const take = Math.min(count, limit - used);
 
-    // Pull stock items — FOR UPDATE SKIP LOCKED prevents race conditions
     const stockRes = await client.query(
       `SELECT id, value FROM stock WHERE type=$1
        ORDER BY created_at ASC LIMIT $2
@@ -282,7 +273,6 @@ app.post('/api/stock/generate', authMiddleware, async (req, res) => {
     const ids   = stockRes.rows.map(r => r.id);
     const items = stockRes.rows.map(r => r.value);
 
-    // Delete served items and increment usage atomically
     await client.query(`DELETE FROM stock WHERE id = ANY($1)`, [ids]);
     await client.query(
       `UPDATE daily_usage SET count=count+$1
@@ -301,7 +291,6 @@ app.post('/api/stock/generate', authMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/stock/add  (admin) ──────────────────────────────────────────────
 app.post('/api/stock/add', adminMiddleware, async (req, res) => {
   try {
     let { type, lines } = req.body;
@@ -310,7 +299,6 @@ app.post('/api/stock/add', adminMiddleware, async (req, res) => {
     const rows = lines.split('\n').map(l => l.trim()).filter(l => l && l.length <= 512);
     if (!rows.length) return res.status(400).json({ error: 'empty' });
 
-    // Batch upsert — ignore duplicates
     let added = 0;
     for (const val of rows) {
       const r = await pool.query(
@@ -326,7 +314,6 @@ app.post('/api/stock/add', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── GET /api/stock/list  (admin) ──────────────────────────────────────────────
 app.get('/api/stock/list', adminMiddleware, async (req, res) => {
   try {
     const type   = req.query.type   || '';
@@ -355,7 +342,6 @@ app.get('/api/stock/list', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── DELETE /api/stock/item/:id  (admin) ───────────────────────────────────────
 app.delete('/api/stock/item/:id', adminMiddleware, async (req, res) => {
   try {
     await pool.query(`DELETE FROM stock WHERE id=$1`, [req.params.id]);
@@ -365,7 +351,6 @@ app.delete('/api/stock/item/:id', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── DELETE /api/stock/clear/:type  (admin) ────────────────────────────────────
 app.delete('/api/stock/clear/:type', adminMiddleware, async (req, res) => {
   try {
     const { type } = req.params;
@@ -377,7 +362,6 @@ app.delete('/api/stock/clear/:type', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/keys/generate  (admin) ─────────────────────────────────────────
 app.post('/api/keys/generate', adminMiddleware, async (req, res) => {
   try {
     let { qty, tier, pcId, discordId, rockstarCodeAccess } = req.body;
@@ -399,7 +383,6 @@ app.post('/api/keys/generate', adminMiddleware, async (req, res) => {
       );
       plainKeys.push(plain);
     }
-    // Plain keys returned ONCE — not stored; owner must copy now
     res.json({ keys: plainKeys });
   } catch (e) {
     console.error('[keys/generate]', e);
@@ -407,7 +390,6 @@ app.post('/api/keys/generate', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/keys/custom  (admin) ────────────────────────────────────────────
 app.post('/api/keys/custom', adminMiddleware, async (req, res) => {
   try {
     let { key, tier, pcId, discordId, rockstarCodeAccess } = req.body;
@@ -433,7 +415,6 @@ app.post('/api/keys/custom', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── GET /api/keys/list  (admin) ───────────────────────────────────────────────
 app.get('/api/keys/list', adminMiddleware, async (req, res) => {
   try {
     const r = await pool.query(
@@ -441,21 +422,19 @@ app.get('/api/keys/list', adminMiddleware, async (req, res) => {
               rockstar_code_access, revoked, uses, last_used_at, created_at
        FROM license_keys ORDER BY created_at DESC`
     );
-    // Never send key_hash to client
     res.json({ keys: r.rows });
   } catch (e) {
     res.status(500).json({ error: 'server_error' });
   }
 });
 
-// ── PATCH /api/keys/:id  (admin) ──────────────────────────────────────────────
 app.patch('/api/keys/:id', adminMiddleware, async (req, res) => {
   try {
     const { revoked, rockstarCodeAccess } = req.body;
     const updates = [];
     const params  = [];
-    if (typeof revoked             === 'boolean') { params.push(revoked);             updates.push(`revoked=$${params.length}`); }
-    if (typeof rockstarCodeAccess  === 'boolean') { params.push(rockstarCodeAccess);  updates.push(`rockstar_code_access=$${params.length}`); }
+    if (typeof revoked            === 'boolean') { params.push(revoked);            updates.push(`revoked=$${params.length}`); }
+    if (typeof rockstarCodeAccess === 'boolean') { params.push(rockstarCodeAccess); updates.push(`rockstar_code_access=$${params.length}`); }
     if (!updates.length) return res.status(400).json({ error: 'nothing_to_patch' });
     params.push(req.params.id);
     await pool.query(`UPDATE license_keys SET ${updates.join(',')} WHERE id=$${params.length}`, params);
@@ -465,7 +444,6 @@ app.patch('/api/keys/:id', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── DELETE /api/keys/:id  (admin) ─────────────────────────────────────────────
 app.delete('/api/keys/:id', adminMiddleware, async (req, res) => {
   try {
     await pool.query(`DELETE FROM license_keys WHERE id=$1`, [req.params.id]);
@@ -475,7 +453,6 @@ app.delete('/api/keys/:id', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── GET /api/announce ─────────────────────────────────────────────────────────
 app.get('/api/announce', authMiddleware, async (req, res) => {
   try {
     const r = await pool.query(
@@ -489,26 +466,20 @@ app.get('/api/announce', authMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/announce  (admin) ───────────────────────────────────────────────
 app.post('/api/announce', adminMiddleware, async (req, res) => {
   try {
     let { kind, body } = req.body;
     if (!VALID_KINDS.includes(kind)) return res.status(400).json({ error: 'invalid_kind' });
     body = sanitize(String(body || ''), 500).trim();
     if (!body) return res.status(400).json({ error: 'empty_body' });
-    await pool.query(
-      `UPDATE announcements SET active=FALSE WHERE kind=$1`, [kind]
-    );
-    await pool.query(
-      `INSERT INTO announcements(kind, body) VALUES($1,$2)`, [kind, body]
-    );
+    await pool.query(`UPDATE announcements SET active=FALSE WHERE kind=$1`, [kind]);
+    await pool.query(`INSERT INTO announcements(kind, body) VALUES($1,$2)`, [kind, body]);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'server_error' });
   }
 });
 
-// ── DELETE /api/announce/:kind  (admin) ───────────────────────────────────────
 app.delete('/api/announce/:kind', adminMiddleware, async (req, res) => {
   try {
     const { kind } = req.params;
@@ -520,7 +491,6 @@ app.delete('/api/announce/:kind', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/bugs  (authed user) ─────────────────────────────────────────────
 app.post('/api/bugs', authMiddleware, async (req, res) => {
   try {
     let { category, title, body } = req.body;
@@ -540,7 +510,6 @@ app.post('/api/bugs', authMiddleware, async (req, res) => {
   }
 });
 
-// ── GET /api/bugs  (admin) ────────────────────────────────────────────────────
 app.get('/api/bugs', adminMiddleware, async (req, res) => {
   try {
     const status   = VALID_BUG_STATUS.includes(req.query.status)   ? req.query.status   : '';
@@ -572,7 +541,6 @@ app.get('/api/bugs', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── PATCH /api/bugs/:id  (admin) ──────────────────────────────────────────────
 app.patch('/api/bugs/:id', adminMiddleware, async (req, res) => {
   try {
     const { status } = req.body;
@@ -584,7 +552,6 @@ app.patch('/api/bugs/:id', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── DELETE /api/bugs  (admin) ─────────────────────────────────────────────────
 app.delete('/api/bugs', adminMiddleware, async (req, res) => {
   try {
     await pool.query(`DELETE FROM bug_reports`);
@@ -594,8 +561,6 @@ app.delete('/api/bugs', adminMiddleware, async (req, res) => {
   }
 });
 
-// ── POST /api/guide/upload/:category/:kind  (admin) ───────────────────────────
-// Stores binary in DB as bytea — no filesystem dependency on Render
 app.post('/api/guide/upload/:category/:kind', adminMiddleware, uploadLimiter,
   upload.single('file'), async (req, res) => {
     try {
@@ -605,7 +570,6 @@ app.post('/api/guide/upload/:category/:kind', adminMiddleware, uploadLimiter,
         return res.status(400).json({ error: 'invalid_params' });
       if (!req.file) return res.status(400).json({ error: 'no_file' });
 
-      // Upsert — one video + one picture per category
       await pool.query(
         `INSERT INTO guide_media(category, kind, filename, mime_type, size_bytes, data)
          VALUES($1,$2,$3,$4,$5,$6)
@@ -622,7 +586,6 @@ app.post('/api/guide/upload/:category/:kind', adminMiddleware, uploadLimiter,
   }
 );
 
-// ── GET /api/guide/:category/:kind ───────────────────────────────────────────
 app.get('/api/guide/:category/:kind', authMiddleware, async (req, res) => {
   try {
     const { category, kind } = req.params;
@@ -640,13 +603,11 @@ app.get('/api/guide/:category/:kind', authMiddleware, async (req, res) => {
   }
 });
 
-// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-// ── 404 fallback for API ──────────────────────────────────────────────────────
 app.use('/api/', (req, res) => res.status(404).json({ error: 'not_found' }));
 
-// ── SPA fallback — serve index.html for all non-API routes ───────────────────
+// SPA fallback — must come after all /api/ routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -655,7 +616,6 @@ app.get('*', (req, res) => {
 (async () => {
   try {
     await initSchema();
-    // Add data column to guide_media if upgrading from old schema
     await pool.query(`
       ALTER TABLE guide_media ADD COLUMN IF NOT EXISTS data BYTEA;
     `).catch(() => {});
