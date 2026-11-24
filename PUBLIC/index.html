@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none';
+               script-src 'self' 'unsafe-inline';
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+               font-src 'self' https://fonts.gstatic.com;
+               img-src 'self' https://cdn.discordapp.com data:;
+               connect-src https://japi.rest;
+               base-uri 'self';
+               form-action 'self';
+               frame-ancestors 'none';">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<title>MAX SHOP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.22);--text:#fff;--muted:rgba(255,255,255,.45);--danger:#f87171;--ok:#4ade80}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;padding:1rem}
+#stars-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.card{position:relative;z-index:1;width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:2rem;box-shadow:0 32px 64px rgba(0,0,0,.8)}
+.brand{display:flex;align-items:center;gap:.6rem;font-weight:900;font-size:1.1rem;margin-bottom:1.75rem}
+.brand-mark{width:36px;height:36px;border-radius:9px;border:1px solid var(--border2);background:rgba(255,255,255,.06);display:grid;place-items:center}
+.brand-mark img{width:22px;height:22px;object-fit:contain;filter:brightness(0) invert(1)}
+.field{display:flex;flex-direction:column;gap:.32rem;margin-bottom:.85rem}
+.field label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.inp{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;padding:.68rem .92rem;color:#fff;font-size:.82rem;outline:none;width:100%;transition:border-color .2s;font-family:'Inter',sans-serif}
+.inp:focus{border-color:rgba(255,255,255,.4)}
+.inp::placeholder{color:rgba(255,255,255,.18)}
+.key-wrap{position:relative}
+.key-wrap .inp{padding-right:2.5rem}
+.eye{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.disc-preview{display:none;align-items:center;gap:.6rem;padding:.5rem .8rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;margin-top:.4rem}
+.disc-preview.show{display:flex}
+.disc-av{width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);object-fit:cover}
+.disc-name{font-size:.8rem;font-weight:700}
+.disc-tag{font-size:.62rem;color:var(--muted);font-family:'Space Mono',monospace}
+.err{font-size:.7rem;color:var(--danger);padding:.45rem .7rem;background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:7px;margin-bottom:.75rem;display:none}
+.err.show{display:block}
+.btn{width:100%;padding:.8rem;border-radius:9px;border:1px solid rgba(255,255,255,.85);background:#fff;color:#000;font-weight:800;font-size:.82rem;cursor:pointer;transition:opacity .18s;font-family:'Inter',sans-serif}
+.btn:hover:not(:disabled){opacity:.88}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.device-strip{margin-top:1.1rem;padding:.55rem .88rem;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:9px}
+.device-label{font-size:.5rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.device-row{display:flex;align-items:center;gap:.5rem}
+.device-val{flex:1;font-family:'Space Mono',monospace;font-size:.72rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:.35rem .65rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copy-btn{padding:.3rem .6rem;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.6rem;font-weight:600;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;white-space:nowrap}
+.copy-btn:hover{color:#fff;border-color:var(--border2)}
+</style>
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<div class="card">
+  <div class="brand">
+    <div class="brand-mark"><img src="assets/logo.png" alt="" onerror="this.style.display='none'"/></div>
+    MAX SHOP
+  </div>
+
+  <div class="field">
+    <label>Discord ID</label>
+    <input class="inp" type="text" id="inp-discord" placeholder="17–20 digit Discord User ID" inputmode="numeric" maxlength="20" autocomplete="off" spellcheck="false"/>
+    <div class="disc-preview" id="disc-preview">
+      <img class="disc-av" id="disc-av" src="" alt=""/>
+      <div><div class="disc-name" id="disc-name"></div><div class="disc-tag" id="disc-tag"></div></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>License Key</label>
+    <div class="key-wrap">
+      <input class="inp" type="password" id="inp-key" placeholder="MAX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false" maxlength="128"/>
+      <button class="eye" id="eye-btn" type="button" aria-label="Toggle key visibility">
+        <svg id="eye-open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg id="eye-shut" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="err" id="err" role="alert"></div>
+  <button class="btn" id="login-btn">Verify &amp; Enter</button>
+
+  <div class="device-strip">
+    <div class="device-label">Your Device ID — share with admin to bind your license</div>
+    <div class="device-row">
+      <div class="device-val" id="device-val"></div>
+      <button class="copy-btn" id="copy-device-btn">Copy</button>
+    </div>
+  </div>
+</div>
+
+<script src="devtools-off.js"></script>
+<script src="api.js"></script>
+<script>
+'use strict';
+
+// Stars
+(function(){
+  const c=document.getElementById('stars-canvas'),ctx=c.getContext('2d');
+  let W,H,stars=[];
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  function init(){resize();stars=[];for(let i=0;i<180;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+.14,a:Math.random(),da:(Math.random()-.5)*.003,speed:Math.random()*.065+.01});}
+  function draw(){ctx.clearRect(0,0,W,H);for(const s of stars){s.a+=s.da;if(s.a>1||s.a<0)s.da*=-1;s.y+=s.speed;if(s.y>H){s.y=0;s.x=Math.random()*W;}ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${(s.a*.5).toFixed(2)})`;ctx.fill();}requestAnimationFrame(draw);}
+  window.addEventListener('resize',init);init();draw();
+})();
+
+// Already logged in?
+if (isAuthed()) {
+  window.location.href = getRole() === 'owner' ? 'x7k2-panel.html' : 'generator.html';
+}
+
+// Device ID
+const DEVICE_ID = (function(){
+  const K='__ms_device__';
+  let id=localStorage.getItem(K);
+  if(!id){
+    const b=crypto.getRandomValues(new Uint8Array(6));
+    const seg=(a,e)=>Array.from(b.slice(a,e)).map(x=>x.toString(16).toUpperCase().padStart(2,'0')).join('').slice(0,4);
+    id=`${seg(0,2)}-${seg(2,4)}-${seg(4,6)}`;
+    localStorage.setItem(K,id);
+  }
+  return id;
+})();
+document.getElementById('device-val').textContent = DEVICE_ID;
+document.getElementById('copy-device-btn').addEventListener('click', function(){
+  navigator.clipboard.writeText(DEVICE_ID);
+  this.textContent='Copied';
+  setTimeout(()=>this.textContent='Copy',2000);
+});
+
+// Eye toggle
+const keyInp = document.getElementById('inp-key');
+document.getElementById('eye-btn').addEventListener('click', () => {
+  const show = keyInp.type === 'password';
+  keyInp.type = show ? 'text' : 'password';
+  document.getElementById('eye-open').style.display = show ? 'none' : '';
+  document.getElementById('eye-shut').style.display = show ? '' : 'none';
+});
+
+// Discord live preview
+let _dt = null;
+document.getElementById('inp-discord').addEventListener('input', function(){
+  const val = this.value.trim();
+  document.getElementById('disc-preview').classList.remove('show');
+  clearTimeout(_dt);
+  if(!/^\d{15,20}$/.test(val)) return;
+  _dt = setTimeout(async () => {
+    try {
+      const res = await fetchDiscordUser(val);
+      if(!res.ok) return;
+      const d = (await res.json()).data;
+      const h = d.avatar;
+      document.getElementById('disc-av').src = h
+        ? `https://cdn.discordapp.com/avatars/${d.id}/${h}.${h.startsWith('a_')?'gif':'png'}?size=64`
+        : `https://cdn.discordapp.com/embed/avatars/${parseInt(d.discriminator||'0')%5}.png`;
+      document.getElementById('disc-name').textContent = d.global_name || d.username;
+      document.getElementById('disc-tag').textContent  = d.discriminator && d.discriminator !== '0'
+        ? `@${d.username}#${d.discriminator}` : `@${d.username}`;
+      document.getElementById('disc-preview').classList.add('show');
+    } catch {}
+  }, 600);
+});
+
+// Login
+const ERR_MAP = {
+  invalid_key:      'Invalid license key.',
+  revoked:          'This key has been revoked.',
+  discord_mismatch: 'Key is locked to a different Discord account.',
+  already_set:      'Already configured.',
+  rate_limited:     null, // handled below with countdown
+  invalid_discord:  'Invalid Discord ID format.',
+};
+
+async function doLogin() {
+  const discordId = document.getElementById('inp-discord').value.trim();
+  const key       = document.getElementById('inp-key').value.trim();
+  const errEl     = document.getElementById('err');
+  const btn       = document.getElementById('login-btn');
+  errEl.classList.remove('show');
+
+  if(!discordId || !/^\d{15,20}$/.test(discordId)) {
+    errEl.textContent='Enter a valid Discord ID (15–20 digits).'; errEl.classList.add('show'); return;
+  }
+  if(!key) { errEl.textContent='Enter your license key.'; errEl.classList.add('show'); return; }
+
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  try {
+    const data = await login(key, discordId);
+    window.location.href = data.role === 'owner' ? 'x7k2-panel.html' : 'generator.html';
+  } catch(e) {
+    const code = e.data?.error;
+    if (code === 'rate_limited') {
+      let secs = e.data?.retryAfter || 30;
+      btn.disabled = true;
+      errEl.classList.add('show');
+      const tick = () => {
+        errEl.textContent = `Too many attempts — try again in ${secs}s.`;
+        if (secs-- > 0) setTimeout(tick, 1000);
+        else { btn.disabled = false; btn.textContent = 'Verify & Enter'; errEl.classList.remove('show'); }
+      };
+      tick(); return;
+    }
+    errEl.textContent = ERR_MAP[code] || e.message || 'Login failed.';
+    errEl.classList.add('show');
+  } finally {
+    if (!document.getElementById('login-btn').disabled) {
+      btn.disabled = false; btn.textContent = 'Verify & Enter';
+    }
+  }
+}
+
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('inp-key').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>

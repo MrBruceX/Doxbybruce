@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none';
+               script-src 'self' 'unsafe-inline';
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+               font-src 'self' https://fonts.gstatic.com data:;
+               img-src 'self' data: blob: https://cdn.discordapp.com;
+               connect-src https://japi.rest;
+               media-src 'self' blob:;
+               frame-src 'none';
+               object-src 'none';
+               base-uri 'self';
+               form-action 'self';
+               frame-ancestors 'none';">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<title>MAX SHOP — Owner Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060608;--surface:rgba(255,255,255,.045);--border:rgba(255,255,255,.09);--border2:rgba(255,255,255,.18);--text:#fff;--muted:rgba(255,255,255,.45);--danger:#ff5f5f;--ok:#4ade80;--warn:#facc15}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;padding:1rem}
+.card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent)}
+.title{font-size:1.3rem;font-weight:900;margin-bottom:.25rem}
+.sub{font-size:.78rem;color:var(--muted);margin-bottom:1.75rem;line-height:1.55}
+.warn-box{background:rgba(250,204,21,.07);border:1px solid rgba(250,204,21,.22);border-radius:10px;padding:.85rem 1rem;margin-bottom:1.4rem;font-size:.74rem;color:#facc15;line-height:1.55}
+.field{display:flex;flex-direction:column;gap:.32rem;margin-bottom:1rem}
+.field label{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.key-wrap{position:relative}
+.field input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;padding:.64rem .88rem;padding-right:2.8rem;color:#fff;font-family:'Space Mono',monospace;font-size:.82rem;outline:none;transition:border-color .2s}
+.field input:focus{border-color:rgba(255,255,255,.32)}
+.field input.no-pad{padding-right:.88rem}
+.eye-btn{position:absolute;right:.7rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:.2rem;display:grid;place-items:center}
+.btn{width:100%;padding:.72rem;border-radius:10px;border:none;background:#fff;color:#000;font-weight:900;font-size:.85rem;cursor:pointer;transition:opacity .18s;letter-spacing:.02em}
+.btn:hover{opacity:.88}
+.btn:disabled{opacity:.4;cursor:default}
+.err{font-size:.72rem;color:var(--danger);margin-top:.6rem;display:none;line-height:1.45}
+.err.show{display:block}
+.ok-box{display:none;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.22);border-radius:10px;padding:1rem;margin-top:1rem;text-align:center}
+.ok-box.show{display:block}
+.ok-icon{font-size:1.6rem;margin-bottom:.5rem}
+.ok-title{font-weight:900;font-size:.95rem;margin-bottom:.25rem;color:var(--ok)}
+.ok-sub{font-size:.74rem;color:var(--muted);line-height:1.5;margin-bottom:.85rem}
+.btn-go{display:inline-block;padding:.52rem 1.4rem;border-radius:8px;border:1px solid var(--border2);background:transparent;color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .18s}
+.btn-go:hover{background:rgba(255,255,255,.07)}
+.already-box{background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.22);border-radius:10px;padding:.85rem 1rem;margin-bottom:1.2rem;font-size:.74rem;color:var(--ok);line-height:1.55}
+.login-link{font-size:.74rem;color:var(--muted);text-align:center;margin-top:1.2rem}
+.login-link a{color:rgba(255,255,255,.65);text-decoration:underline}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(255,95,95,.35);font-size:.72rem;margin-top:.5rem}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="title">Owner Setup</div>
+  <div class="sub">Set your owner key once. It is hashed locally with SHA-256 and stored in this browser — no server, no network. Keep the key safe; it cannot be recovered from the hash.</div>
+  <div class="warn-box">⚠ This page is for the shop owner only. If someone sent you this link and you're not the owner, close this tab.</div>
+
+  <div id="already-box" style="display:none">
+    <div class="already-box">✓ Owner key is already set.<br/><span style="color:var(--muted);font-size:.7rem">Go to login and use your key.</span></div>
+    <a href="index.html" class="btn" style="display:block;text-align:center;text-decoration:none">Go to Login</a>
+    <button class="btn btn-danger" id="reset-btn" style="width:100%;margin-top:.5rem">Reset Owner Key</button>
+  </div>
+
+  <div id="setup-form" style="display:none">
+    <div class="field">
+      <label>Owner Key</label>
+      <div class="key-wrap">
+        <input type="password" id="key-inp" placeholder="Your secret owner key (8–128 chars)" autocomplete="new-password" spellcheck="false"/>
+        <button class="eye-btn" type="button" id="eye-btn" aria-label="Toggle visibility">
+          <svg id="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eye-shut" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Confirm Key</label>
+      <input type="password" id="key-confirm" class="no-pad" placeholder="Re-enter your owner key" autocomplete="new-password" spellcheck="false"/>
+    </div>
+    <button class="btn" id="set-btn">Set Owner Key</button>
+    <div class="err" id="err-msg" role="alert"></div>
+    <div class="ok-box" id="ok-box">
+      <div class="ok-icon">✓</div>
+      <div class="ok-title">Owner key set!</div>
+      <div class="ok-sub">Hash stored locally. Go to login and use your key to access the admin panel.</div>
+      <a href="index.html" class="btn-go">Go to Login →</a>
+    </div>
+    <div class="login-link">Already set up? <a href="index.html">Go to login</a></div>
+  </div>
+</div>
+
+<script src="devtools-off.js"></script>
+<script src="api.js"></script>
+<script>
+'use strict';
+
+// Boot — no server ping needed
+(function boot(){
+  if (ownerIsSet()) {
+    document.getElementById('already-box').style.display = 'block';
+  } else {
+    document.getElementById('setup-form').style.display  = 'block';
+  }
+})();
+
+document.getElementById('reset-btn')?.addEventListener('click', function(){
+  if (!confirm('This clears the stored owner hash. You will need to re-set your key. Continue?')) return;
+  localStorage.removeItem('__ms_owner_hash__');
+  document.getElementById('already-box').style.display = 'none';
+  document.getElementById('setup-form').style.display  = 'block';
+});
+
+// Eye toggle
+const keyInp = document.getElementById('key-inp');
+document.getElementById('eye-btn').addEventListener('click', () => {
+  const show = keyInp.type === 'password';
+  keyInp.type = show ? 'text' : 'password';
+  document.getElementById('eye-open').style.display = show ? 'none' : '';
+  document.getElementById('eye-shut').style.display = show ? '' : 'none';
+});
+
+async function doSetup() {
+  const key     = document.getElementById('key-inp').value;
+  const confirm = document.getElementById('key-confirm').value;
+  const err     = document.getElementById('err-msg');
+  const btn     = document.getElementById('set-btn');
+  err.classList.remove('show');
+
+  if (!key)             { err.textContent='Enter your owner key.';               err.classList.add('show'); return; }
+  if (key.length < 8)   { err.textContent='Key must be at least 8 characters.';  err.classList.add('show'); return; }
+  if (key.length > 128) { err.textContent='Key must be 128 characters or fewer.'; err.classList.add('show'); return; }
+  if (key !== confirm)  { err.textContent='Keys do not match.';                   err.classList.add('show'); return; }
+
+  btn.disabled = true; btn.textContent = 'Hashing…';
+  try {
+    await bootstrap(key);
+    document.getElementById('ok-box').classList.add('show');
+    btn.style.display = 'none';
+    document.getElementById('key-inp').value     = '';
+    document.getElementById('key-confirm').value = '';
+  } catch(e) {
+    err.textContent = e.data?.error === 'already_set'
+      ? 'Owner key already set — go to login.'
+      : (e.message || 'Setup failed.');
+    err.classList.add('show');
+    btn.disabled = false; btn.textContent = 'Set Owner Key';
+  }
+}
+
+document.getElementById('set-btn').addEventListener('click', doSetup);
+[document.getElementById('key-inp'), document.getElementById('key-confirm')]
+  .forEach(el => el.addEventListener('keydown', e => { if(e.key==='Enter') doSetup(); }));
+</script>
+</body>
+</html>

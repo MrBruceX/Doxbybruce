@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none';
+               script-src 'self' 'unsafe-inline';
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+               font-src 'self' https://fonts.gstatic.com data:;
+               img-src 'self' data: blob: https://cdn.discordapp.com;
+               connect-src https://japi.rest;
+               media-src 'self' blob:;
+               frame-src 'none';
+               object-src 'none';
+               base-uri 'self';
+               form-action 'self';
+               frame-ancestors 'none';">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<title>MAX SHOP — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060608;--surface:rgba(255,255,255,.045);--border:rgba(255,255,255,.09);--border2:rgba(255,255,255,.18);--text:#fff;--muted:rgba(255,255,255,.45);--ok:#4ade80;--danger:#ff5f5f;--warn:#facc15}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden}
+nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;height:56px;border-bottom:1px solid var(--border);background:rgba(6,6,8,.82);backdrop-filter:blur(20px)}
+.nav-brand{font-weight:900;font-size:1rem;display:flex;align-items:center;gap:.5rem}
+.admin-badge{font-size:.6rem;font-weight:800;padding:.18rem .48rem;border-radius:4px;background:rgba(255,255,255,.12);letter-spacing:.1em}
+.btn-sm{padding:.38rem .85rem;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.74rem;font-weight:600;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif}
+.btn-sm:hover{color:var(--text);border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.05)}
+main{max-width:1100px;margin:38px auto;padding:0 1.5rem 3rem}
+.page-title{font-size:1.7rem;font-weight:900;letter-spacing:-.025em;margin-bottom:.25rem}
+.page-sub{color:var(--muted);font-size:.82rem;margin-bottom:1.75rem}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.8rem;margin-bottom:1.75rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.1rem;text-align:center}
+.stat-num{font-family:'Space Mono',monospace;font-size:1.8rem;font-weight:700;line-height:1}
+.stat-lbl{font-size:.64rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:.4rem}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.75rem;overflow-x:auto;scrollbar-width:none}
+.tab{padding:.6rem 1.2rem;border:none;background:none;color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;margin-bottom:-1px;font-family:'Inter',sans-serif;white-space:nowrap}
+.tab.active{color:#fff;border-bottom-color:#fff}
+.tab-content{display:none}.tab-content.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.1rem;position:relative;overflow:hidden}
+.card-title{font-weight:700;font-size:.92rem;margin-bottom:.22rem}
+.card-sub{color:var(--muted);font-size:.77rem;margin-bottom:1.2rem}
+textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;color:#fff;font-family:'Space Mono',monospace;font-size:.76rem;line-height:1.65;resize:vertical;outline:none;min-height:110px;transition:border-color .2s}
+textarea:focus{border-color:rgba(255,255,255,.32)}
+.btn-row{display:flex;gap:.55rem;margin-top:.7rem;flex-wrap:wrap}
+.btn{padding:.6rem 1.1rem;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;cursor:pointer;transition:all .18s;font-family:'Inter',sans-serif;font-weight:500}
+.btn:hover{color:#fff;border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.05)}
+.btn-primary{background:#fff;color:#000;border-color:#fff;font-weight:700}
+.btn-primary:hover{opacity:.85;color:#000}
+.btn-danger{border-color:var(--danger);color:var(--danger)}
+.btn-danger:hover{background:rgba(255,95,95,.12)}
+.field{display:flex;flex-direction:column;gap:.32rem;flex:1;min-width:155px}
+.field label{font-size:.7rem;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase}
+.field input,.field select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;padding:.62rem .9rem;color:#fff;font-size:.82rem;outline:none;transition:border-color .2s;font-family:'Inter',sans-serif}
+.field input:focus,.field select:focus{border-color:rgba(255,255,255,.32)}
+.key-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.key-table th{text-align:left;padding:.5rem .7rem;color:var(--muted);font-weight:700;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.key-table td{padding:.58rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.key-table tr:last-child td{border-bottom:none}
+.del-btn{padding:.22rem .55rem;border:1px solid rgba(255,80,80,.3);border-radius:5px;background:transparent;color:var(--danger);font-size:.68rem;cursor:pointer;transition:all .18s}
+.del-btn:hover{background:rgba(255,80,80,.12)}
+.access-pill{font-size:.62rem;font-weight:700;padding:.12rem .42rem;border-radius:5px;border:1px solid transparent;cursor:default}
+.access-pill.on{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.28);color:#4ade80}
+.access-pill.off{background:rgba(255,95,95,.07);border-color:rgba(255,95,95,.2);color:rgba(255,95,95,.7)}
+.toggle-btn{padding:.22rem .55rem;border:1px solid rgba(250,204,21,.28);border-radius:5px;background:transparent;color:#facc15;font-size:.65rem;cursor:pointer;transition:all .18s;font-weight:600}
+.toggle-btn:hover{background:rgba(250,204,21,.1)}
+.empty-row{color:var(--muted);font-size:.78rem;padding:.75rem 0;text-align:center}
+.preview-box{margin-top:.85rem;padding:.75rem 1rem;border:1px solid rgba(250,204,21,.22);border-radius:10px;display:none;background:rgba(250,204,21,.06)}
+.preview-box.show{display:block}
+.preview-box.green{border-color:rgba(74,222,128,.22);background:rgba(74,222,128,.06)}
+.preview-label{font-size:.6rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:rgba(250,204,21,.6);margin-bottom:.35rem}
+.preview-box.green .preview-label{color:rgba(74,222,128,.6)}
+.preview-text{font-size:.82rem;color:#facc15;line-height:1.5}
+.preview-box.green .preview-text{color:#4ade80}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;background:#fff;color:#000;font-weight:700;font-size:.8rem;padding:.65rem 1.1rem;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.5);transform:translateY(20px);opacity:0;transition:all .28s;pointer-events:none}
+.toast.show{opacity:1;transform:none}
+.bug-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.bug-table th{text-align:left;padding:.5rem .7rem;color:var(--muted);font-weight:700;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.bug-table td{padding:.6rem .7rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+.bug-cat{font-size:.62rem;font-weight:700;padding:.1rem .38rem;border-radius:4px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171}
+.bug-status-open{background:rgba(250,204,21,.1);border:1px solid rgba(250,204,21,.22);color:#facc15;font-size:.6rem;font-weight:700;padding:.1rem .38rem;border-radius:4px}
+.bug-status-resolved{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:#4ade80;font-size:.6rem;font-weight:700;padding:.1rem .38rem;border-radius:4px}
+.bug-status-closed{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--muted);font-size:.6rem;font-weight:700;padding:.1rem .38rem;border-radius:4px}
+.bug-resolve-btn{padding:.18rem .48rem;border:1px solid rgba(74,222,128,.28);border-radius:4px;background:transparent;color:#4ade80;font-size:.62rem;cursor:pointer;transition:all .18s}
+.bug-close-btn{padding:.18rem .48rem;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--muted);font-size:.62rem;cursor:pointer;transition:all .18s}
+.sl-account-cell{font-family:'Space Mono',monospace;font-size:.72rem;word-break:break-all;max-width:400px}
+.sl-del-btn{padding:.18rem .48rem;border:1px solid rgba(255,80,80,.3);border-radius:5px;background:transparent;color:var(--danger);font-size:.65rem;cursor:pointer}
+.sl-copy-btn{padding:.18rem .48rem;border:1px solid var(--border);border-radius:5px;background:transparent;color:var(--muted);font-size:.65rem;cursor:pointer}
+.sl-pages{display:flex;gap:.35rem;margin-top:.9rem;flex-wrap:wrap;align-items:center}
+.sl-page-btn{padding:.28rem .62rem;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.7rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s}
+.sl-page-btn.active{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.28)}
+.stock-search{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;padding:.38rem .75rem;color:#fff;font-size:.78rem;outline:none;font-family:'Space Mono',monospace;min-width:180px}
+.stock-search::placeholder{color:rgba(255,255,255,.18)}
+footer{text-align:center;padding:2rem 0 .75rem;color:var(--muted);font-size:.7rem}
+</style>
+</head>
+<body>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<nav>
+  <div class="nav-brand">MAX SHOP <span class="admin-badge">Admin</span></div>
+  <div style="display:flex;gap:.6rem">
+    <button class="btn-sm" id="nav-gen-btn">Generator</button>
+    <button class="btn-sm" id="nav-logout-btn">Logout</button>
+  </div>
+</nav>
+
+<main>
+  <div class="page-title">Admin Panel</div>
+  <div class="page-sub">Manage stock, license keys, announcements, and bug reports.</div>
+  <div class="stat-grid" id="stat-grid"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="stock">Stock</button>
+    <button class="tab" data-tab="keys">License Keys</button>
+    <button class="tab" data-tab="announce">Announcements</button>
+    <button class="tab" data-tab="stockupdate">Stock Update</button>
+    <button class="tab" data-tab="bugs">Bug Reports</button>
+    <button class="tab" data-tab="stocklist">Stock List</button>
+    <button class="tab" data-tab="guide">Guide Media</button>
+  </div>
+
+  <!-- STOCK TAB -->
+  <div class="tab-content active" id="tab-stock">
+    <div class="card"><div class="card-title">Discord Accounts</div><div class="card-sub">One per line: email:password or token</div><textarea id="in-discord" placeholder="user@email.com:password123"></textarea><div class="btn-row"><button class="btn btn-primary" data-addstock="discord">Add to Stock</button><button class="btn btn-danger" data-clearstock="discord">Clear</button></div></div>
+    <div class="card"><div class="card-title">Steam Accounts</div><div class="card-sub">One per line: username:password</div><textarea id="in-steam" placeholder="username:password"></textarea><div class="btn-row"><button class="btn btn-primary" data-addstock="steam">Add to Stock</button><button class="btn btn-danger" data-clearstock="steam">Clear</button></div></div>
+    <div class="card"><div class="card-title">Rockstar Accounts</div><div class="card-sub">One per line: email:password</div><textarea id="in-rockstar" placeholder="email@example.com:password"></textarea><div class="btn-row"><button class="btn btn-primary" data-addstock="rockstar">Add to Stock</button><button class="btn btn-danger" data-clearstock="rockstar">Clear</button></div></div>
+    <div class="card"><div class="card-title">Rockstar Codes</div><div class="card-sub">One code per line</div><textarea id="in-rockstar_code" placeholder="XXXX-XXXX-XXXX-XXXX"></textarea><div class="btn-row"><button class="btn btn-primary" data-addstock="rockstar_code">Add to Stock</button><button class="btn btn-danger" data-clearstock="rockstar_code">Clear</button></div></div>
+  </div>
+
+  <!-- KEYS TAB -->
+  <div class="tab-content" id="tab-keys">
+    <div class="card">
+      <div class="card-title">Generate Keys</div>
+      <div class="card-sub">Keys returned once — copy immediately.</div>
+      <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:.9rem">
+        <div class="field"><label>Quantity</label><input type="number" id="key-qty" value="1" min="1" max="50"/></div>
+        <div class="field"><label>Tier</label><select id="key-tier"><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="lifetime">Lifetime</option></select></div>
+        <div class="field"><label>PC ID (optional)</label><input type="text" id="key-pcid" placeholder="Device ID to lock" maxlength="32"/></div>
+        <div class="field"><label>Discord ID (optional)</label><input type="text" id="key-discordid" placeholder="Lock to Discord" maxlength="20" inputmode="numeric"/></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.9rem">
+        <input type="checkbox" id="key-rsc" style="accent-color:#facc15;width:16px;height:16px;cursor:pointer"/>
+        <label for="key-rsc" style="font-size:.74rem;font-weight:600;color:#facc15;cursor:pointer">Rockstar Code Access</label>
+      </div>
+      <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:.9rem">
+        <div class="field"><label>Custom Key</label><input type="text" id="custom-key-inp" placeholder="MAX-CUSTOM-KEY-HERE" maxlength="128"/></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="gen-keys-btn">Generate</button>
+        <button class="btn" id="add-custom-btn">Add Custom</button>
+      </div>
+      <div id="keys-banner" style="margin-top:.85rem"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">All Keys</div>
+      <div style="overflow-x:auto"><table class="key-table"><thead><tr><th>ID</th><th>Tier</th><th>PC ID</th><th>Discord</th><th>Created</th><th>Uses</th><th>Revoked</th><th>R* Code</th><th>Actions</th></tr></thead><tbody id="key-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ANNOUNCE TAB -->
+  <div class="tab-content" id="tab-announce">
+    <div class="card">
+      <div class="card-title">Active Announcement</div>
+      <div class="card-sub">Yellow banner on generator page.</div>
+      <div class="preview-box" id="ann-current"><div class="preview-label">LIVE</div><div class="preview-text" id="ann-current-text"></div></div>
+      <div id="ann-none" style="font-size:.8rem;color:var(--muted)">No active announcement.</div>
+      <div class="btn-row" style="margin-top:.85rem"><button class="btn btn-danger" id="ann-clear-btn">Clear</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Post Announcement</div>
+      <textarea id="ann-input" placeholder="e.g. Maintenance tonight at 11PM." style="min-height:90px" maxlength="500"></textarea>
+      <div class="preview-box" id="ann-preview"><div class="preview-label">PREVIEW</div><div class="preview-text" id="ann-preview-text"></div></div>
+      <div class="btn-row"><button class="btn btn-primary" id="ann-post-btn">Publish</button></div>
+    </div>
+  </div>
+
+  <!-- STOCK UPDATE TAB -->
+  <div class="tab-content" id="tab-stockupdate">
+    <div class="card">
+      <div class="card-title">Active Stock Update</div>
+      <div class="card-sub">Green banner on generator page.</div>
+      <div class="preview-box green" id="su-current"><div class="preview-label">LIVE</div><div class="preview-text" id="su-current-text"></div></div>
+      <div id="su-none" style="font-size:.8rem;color:var(--muted)">No active stock update.</div>
+      <div class="btn-row" style="margin-top:.85rem"><button class="btn btn-danger" id="su-clear-btn">Clear</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Post Stock Update</div>
+      <textarea id="su-input" placeholder="e.g. 🟢 Discord restocked — 150 new accounts!" style="min-height:90px" maxlength="500"></textarea>
+      <div class="preview-box green" id="su-preview"><div class="preview-label">PREVIEW</div><div class="preview-text" id="su-preview-text"></div></div>
+      <div class="btn-row"><button class="btn btn-primary" id="su-post-btn" style="background:#4ade80;border-color:#4ade80;color:#000">Publish</button></div>
+    </div>
+  </div>
+
+  <!-- BUGS TAB -->
+  <div class="tab-content" id="tab-bugs">
+    <div class="card">
+      <div class="card-title">Bug Reports</div>
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+        <select id="bug-status-filter" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;padding:.38rem .7rem;color:var(--muted);font-size:.72rem;font-family:'Inter',sans-serif;outline:none"><option value="">All Status</option><option value="open">Open</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
+        <button class="btn btn-danger" id="bugs-clear-btn" style="margin-left:auto">Clear All</button>
+      </div>
+      <div style="overflow-x:auto"><table class="bug-table"><thead><tr><th>Category</th><th>Title</th><th>Details</th><th>Reporter</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody id="bug-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- GUIDE MEDIA TAB -->
+  <div class="tab-content" id="tab-guide">
+    <div class="card">
+      <div class="card-title">Guide Media Upload</div>
+      <div class="card-sub">Upload a video or picture for each guide category. Files stored locally in IndexedDB — same storage guide.html reads from. Max 500 MB per file.</div>
+      <div id="guide-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-top:.5rem"></div>
+    </div>
+  </div>
+
+  <!-- STOCK LIST TAB -->
+  <div class="tab-content" id="tab-stocklist">
+    <div class="card">
+      <div class="card-title">Stock List</div>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+        <select id="sl-service" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;padding:.38rem .7rem;color:var(--muted);font-size:.72rem;font-family:'Inter',sans-serif;outline:none"><option value="discord">Discord</option><option value="steam">Steam</option><option value="rockstar">Rockstar</option><option value="rockstar_code">R* Codes</option></select>
+        <input class="stock-search" type="text" id="sl-search" placeholder="Search…"/>
+        <span id="sl-count" style="font-size:.74rem;color:var(--muted)"></span>
+        <button class="btn" id="sl-export-btn" style="margin-left:auto">Export</button>
+      </div>
+      <div style="overflow-x:auto"><table class="key-table"><thead><tr><th>#</th><th>Account / Code</th><th>Actions</th></tr></thead><tbody id="sl-tbody"></tbody></table></div>
+      <div class="sl-pages" id="sl-pages"></div>
+    </div>
+  </div>
+</main>
+
+<footer>MAX SHOP Admin · All data stored locally · Session auth</footer>
+
+<script src="devtools-off.js"></script>
+<script src="api.js"></script>
+<script>
+'use strict';
+requireAdmin().then(() => { /* init runs only after MAC verified */
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function toast(msg, dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),dur);
+}
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function timeAgo(ts){ const s=Math.floor((Date.now()-new Date(ts).getTime())/1000); if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+document.getElementById('nav-gen-btn').addEventListener('click', () => window.location.href='generator.html');
+document.getElementById('nav-logout-btn').addEventListener('click', () => logout());
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function loadStats(){
+  const counts = stockCounts();
+  const labels = {discord:'Discord',steam:'Steam',rockstar:'Rockstar',rockstar_code:'R* Codes'};
+  document.getElementById('stat-grid').innerHTML =
+    Object.entries(labels).map(([k,v])=>`<div class="stat-card"><div class="stat-num">${escH(String(counts[k]||0))}</div><div class="stat-lbl">${escH(v)}</div></div>`).join('');
+}
+loadStats();
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab,.tab-content').forEach(el=>el.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    const t = tab.dataset.tab;
+    if(t==='bugs')      loadBugs();
+    if(t==='stocklist') loadStockList();
+    if(t==='announce'||t==='stockupdate') loadAnn();
+    if(t==='keys')      loadKeys();
+    if(t==='guide')     loadGuideTab();
+  });
+});
+
+// ── Stock ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('[data-addstock]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.addstock;
+    const val  = document.getElementById('in-'+type).value;
+    if(!val.trim()){ toast('Nothing to add'); return; }
+    try { const r=stockAdd(type,val); document.getElementById('in-'+type).value=''; loadStats(); toast('Added '+r.added+' items'); }
+    catch(e){ toast('Error: '+e.message); }
+  });
+});
+document.querySelectorAll('[data-clearstock]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.clearstock;
+    if(!confirm('Clear ALL '+type+' stock?')) return;
+    stockClear(type); loadStats(); toast('Cleared');
+  });
+});
+
+// ── Keys ──────────────────────────────────────────────────────────────────────
+function loadKeys(){
+  const r = keysList();
+  const tbody = document.getElementById('key-tbody');
+  if(!r.keys.length){ tbody.innerHTML=`<tr><td colspan="9" class="empty-row">No keys yet.</td></tr>`; return; }
+  tbody.innerHTML='';
+  r.keys.forEach(k => {
+    const tr=document.createElement('tr');
+    // Safe text nodes — no innerHTML with untrusted data
+    const cells = [
+      k.id.slice(0,8)+'…', k.tier,
+      k.pcId||'—', k.lockedDiscord||k.discordIdPreset||'—',
+      new Date(k.createdAt).toLocaleDateString(),
+      String(k.uses),
+    ];
+    const tds = cells.map(v=>{ const td=document.createElement('td'); td.style.cssText='font-size:.72rem;color:var(--muted)'; td.textContent=v; return td; });
+    tds[0].style.fontFamily="'Space Mono',monospace"; tds[0].style.fontSize='.65rem';
+    tds[1].style.color='var(--text)';
+
+    const tdRev=document.createElement('td');
+    tdRev.innerHTML=`<span class="access-pill ${k.revoked?'off':'on'}">${k.revoked?'YES':'NO'}</span>`;
+    const tdRsc=document.createElement('td');
+    tdRsc.innerHTML=`<span class="access-pill ${k.rockstarCodeAccess?'on':'off'}">${k.rockstarCodeAccess?'YES':'NO'}</span>`;
+
+    const tdAct=document.createElement('td'); tdAct.style.cssText='display:flex;gap:.3rem;flex-wrap:wrap';
+    const bRsc=document.createElement('button'); bRsc.className='toggle-btn'; bRsc.textContent=k.rockstarCodeAccess?'Revoke R*':'Grant R*';
+    bRsc.addEventListener('click',()=>{ keysPatch(k.id,{rockstarCodeAccess:!k.rockstarCodeAccess}); loadKeys(); toast(k.rockstarCodeAccess?'R* revoked':'R* granted'); });
+    const bRev=document.createElement('button'); bRev.className='toggle-btn'; bRev.style.cssText='border-color:rgba(255,80,80,.3);color:var(--danger)'; bRev.textContent=k.revoked?'Unrevoke':'Revoke';
+    bRev.addEventListener('click',()=>{ keysPatch(k.id,{revoked:!k.revoked}); loadKeys(); toast(k.revoked?'Unrevoked':'Revoked'); });
+    const bDel=document.createElement('button'); bDel.className='del-btn'; bDel.textContent='Del';
+    bDel.addEventListener('click',()=>{ if(!confirm('Delete this key?'))return; keysDelete(k.id); loadKeys(); toast('Deleted'); });
+    tdAct.append(bRsc,bRev,bDel);
+
+    tr.append(...tds, tdRev, tdRsc, tdAct);
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('gen-keys-btn').addEventListener('click', () => {
+  const qty=Math.min(50,Math.max(1,parseInt(document.getElementById('key-qty').value)||1));
+  const tier=document.getElementById('key-tier').value;
+  const pcId=document.getElementById('key-pcid').value.trim();
+  const discordId=document.getElementById('key-discordid').value.trim();
+  const rsc=document.getElementById('key-rsc').checked;
+  const r=keysGenerate(qty,tier,pcId||null,discordId||null,rsc);
+  showKeysBanner(r.keys); loadKeys();
+});
+
+document.getElementById('add-custom-btn').addEventListener('click', () => {
+  const val=document.getElementById('custom-key-inp').value.trim();
+  if(!val){ toast('Enter a key'); return; }
+  const tier=document.getElementById('key-tier').value;
+  const pcId=document.getElementById('key-pcid').value.trim();
+  const discordId=document.getElementById('key-discordid').value.trim();
+  const rsc=document.getElementById('key-rsc').checked;
+  try { keysCustom(val,tier,pcId||null,discordId||null,rsc); document.getElementById('custom-key-inp').value=''; loadKeys(); showKeysBanner([val]); }
+  catch(e){ toast(e.data?.error==='duplicate'?'Key already exists':'Error: '+e.message); }
+});
+
+function showKeysBanner(keys){
+  const banner=document.getElementById('keys-banner');
+  banner.innerHTML='';
+  const hdr=document.createElement('div');
+  hdr.style.cssText='font-size:.72rem;font-weight:800;color:rgba(74,222,128,.8);margin-bottom:.6rem';
+  hdr.textContent='✓ '+keys.length+' key'+(keys.length>1?'s':'')+' generated — copy now';
+  banner.appendChild(hdr);
+  keys.forEach(k=>{
+    const row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:.5rem;margin-bottom:.38rem';
+    const code=document.createElement('code'); code.style.cssText='flex:1;font-family:"Space Mono",monospace;font-size:.75rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:.35rem .6rem;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    code.textContent=k;
+    const cp=document.createElement('button'); cp.style.cssText='padding:.32rem .7rem;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:transparent;color:rgba(255,255,255,.7);font-size:.68rem;font-weight:700;cursor:pointer;white-space:nowrap;font-family:"Inter",sans-serif';
+    cp.textContent='Copy';
+    cp.addEventListener('click',()=>{ navigator.clipboard.writeText(k); cp.textContent='✓'; cp.style.color='#4ade80'; setTimeout(()=>{cp.textContent='Copy';cp.style.color='';},1800); });
+    row.append(code,cp); banner.appendChild(row);
+  });
+  if(keys.length>1){
+    const all=document.createElement('button'); all.style.cssText='margin-top:.3rem;width:100%;padding:.42rem;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:rgba(255,255,255,.65);font-size:.72rem;font-weight:700;cursor:pointer;font-family:"Inter",sans-serif';
+    all.textContent='Copy All';
+    all.addEventListener('click',()=>navigator.clipboard.writeText(keys.join('\n')));
+    banner.appendChild(all);
+  }
+}
+
+// ── Announcements ─────────────────────────────────────────────────────────────
+function loadAnn(){
+  const a=announceGet();
+  const ann=a.announcement||''; const su=a.stock_update||'';
+  document.getElementById('ann-current-text').textContent=ann;
+  document.getElementById('ann-current').classList.toggle('show',!!ann);
+  document.getElementById('ann-none').style.display=ann?'none':'block';
+  document.getElementById('su-current-text').textContent=su;
+  document.getElementById('su-current').classList.toggle('show',!!su);
+  document.getElementById('su-none').style.display=su?'none':'block';
+}
+document.getElementById('ann-input').addEventListener('input',function(){ const v=this.value.trim(); document.getElementById('ann-preview-text').textContent=v; document.getElementById('ann-preview').classList.toggle('show',!!v); });
+document.getElementById('su-input').addEventListener('input',function(){ const v=this.value.trim(); document.getElementById('su-preview-text').textContent=v; document.getElementById('su-preview').classList.toggle('show',!!v); });
+document.getElementById('ann-post-btn').addEventListener('click',()=>{ const v=document.getElementById('ann-input').value.trim(); if(!v){toast('Write something first');return;} announcePost('announcement',v); document.getElementById('ann-input').value=''; loadAnn(); toast('Published'); });
+document.getElementById('ann-clear-btn').addEventListener('click',()=>{ if(!confirm('Remove?'))return; announceDelete('announcement'); loadAnn(); toast('Cleared'); });
+document.getElementById('su-post-btn').addEventListener('click',()=>{ const v=document.getElementById('su-input').value.trim(); if(!v){toast('Write something first');return;} announcePost('stock_update',v); document.getElementById('su-input').value=''; loadAnn(); toast('Published'); });
+document.getElementById('su-clear-btn').addEventListener('click',()=>{ if(!confirm('Remove?'))return; announceDelete('stock_update'); loadAnn(); toast('Cleared'); });
+
+// ── Bugs ──────────────────────────────────────────────────────────────────────
+document.getElementById('bug-status-filter').addEventListener('change', loadBugs);
+document.getElementById('bugs-clear-btn').addEventListener('click',()=>{ if(!confirm('Delete all bug reports?'))return; bugsClear(); loadBugs(); toast('Cleared'); });
+
+function loadBugs(){
+  const status=document.getElementById('bug-status-filter').value;
+  const r=bugsList(status,'',0);
+  const tbody=document.getElementById('bug-tbody');
+  if(!r.reports.length){ tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:.75rem">No reports found.</td></tr>`; return; }
+  tbody.innerHTML='';
+  r.reports.forEach(rep=>{
+    const tr=document.createElement('tr');
+    const catTd=document.createElement('td'); catTd.innerHTML=`<span class="bug-cat">${escH(rep.category)}</span>`;
+    const titTd=document.createElement('td'); titTd.style.cssText='font-weight:600;font-size:.78rem;max-width:200px'; titTd.textContent=rep.title;
+    const detTd=document.createElement('td'); detTd.style.cssText='font-size:.7rem;color:var(--muted);max-width:260px'; detTd.textContent=(rep.body||'').substring(0,100)+(rep.body?.length>100?'…':'');
+    const repTd=document.createElement('td'); repTd.style.cssText="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted)"; repTd.textContent=rep.discordId||'—';
+    const timeTd=document.createElement('td'); timeTd.style.cssText='font-size:.62rem;color:var(--muted);white-space:nowrap'; timeTd.textContent=timeAgo(rep.createdAt);
+    const staTd=document.createElement('td'); staTd.innerHTML=`<span class="bug-status-${escH(rep.status)}">${escH(rep.status)}</span>`;
+    const actTd=document.createElement('td'); actTd.style.display='flex'; actTd.style.gap='.3rem'; actTd.style.flexWrap='wrap';
+    if(rep.status==='open'){ const bRes=document.createElement('button'); bRes.className='bug-resolve-btn'; bRes.textContent='Resolve'; bRes.addEventListener('click',()=>{ bugsPatch(rep.id,'resolved'); loadBugs(); toast('Updated'); }); actTd.append(bRes); }
+    const bCl=document.createElement('button'); bCl.className='bug-close-btn'; bCl.textContent='Close'; bCl.addEventListener('click',()=>{ bugsPatch(rep.id,'closed'); loadBugs(); toast('Updated'); }); actTd.append(bCl);
+    tr.append(catTd,titTd,detTd,repTd,timeTd,staTd,actTd); tbody.appendChild(tr);
+  });
+}
+
+// ── Stock List ────────────────────────────────────────────────────────────────
+let _slPage=0;
+document.getElementById('sl-service').addEventListener('change',()=>{ _slPage=0; loadStockList(); });
+document.getElementById('sl-search').addEventListener('input',()=>{ _slPage=0; loadStockList(); });
+
+function loadStockList(){
+  const svc=document.getElementById('sl-service').value;
+  const q=document.getElementById('sl-search').value;
+  const r=stockList(svc,_slPage,q);
+  document.getElementById('sl-count').textContent=r.total+' accounts';
+  const tbody=document.getElementById('sl-tbody'); tbody.innerHTML='';
+  if(!r.items.length){ tbody.innerHTML=`<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:.75rem">No accounts.</td></tr>`; return; }
+  r.items.forEach((item,i)=>{
+    const tr=document.createElement('tr');
+    const tdIdx=document.createElement('td'); tdIdx.style.cssText='color:var(--muted);font-size:.7rem;width:48px'; tdIdx.textContent=String(_slPage*50+i+1);
+    const tdVal=document.createElement('td'); tdVal.className='sl-account-cell'; tdVal.textContent=item.value;
+    const tdAct=document.createElement('td'); tdAct.style.display='flex'; tdAct.style.gap='.35rem';
+    const cp=document.createElement('button'); cp.className='sl-copy-btn'; cp.textContent='Copy';
+    cp.addEventListener('click',()=>{ navigator.clipboard.writeText(item.value); cp.textContent='✓'; setTimeout(()=>cp.textContent='Copy',1500); });
+    const dl=document.createElement('button'); dl.className='sl-del-btn'; dl.textContent='Del';
+    dl.addEventListener('click',()=>{ stockDeleteItem(svc, item.id); loadStockList(); loadStats(); toast('Deleted'); });
+    tdAct.append(cp,dl); tr.append(tdIdx,tdVal,tdAct); tbody.appendChild(tr);
+  });
+  const totalPages=Math.max(1,Math.ceil(r.total/50));
+  const pages=document.getElementById('sl-pages'); pages.innerHTML='';
+  if(totalPages<=1) return;
+  if(_slPage>0){ const b=document.createElement('button'); b.className='sl-page-btn'; b.textContent='‹ Prev'; b.addEventListener('click',()=>{ _slPage--; loadStockList(); }); pages.appendChild(b); }
+  for(let p=Math.max(0,_slPage-2);p<=Math.min(totalPages-1,_slPage+2);p++){ const b=document.createElement('button'); b.className='sl-page-btn'+(p===_slPage?' active':''); b.textContent=p+1; b.addEventListener('click',(()=>{const pp=p;return()=>{ _slPage=pp; loadStockList(); };})() ); pages.appendChild(b); }
+  if(_slPage<totalPages-1){ const b=document.createElement('button'); b.className='sl-page-btn'; b.textContent='Next ›'; b.addEventListener('click',()=>{ _slPage++; loadStockList(); }); pages.appendChild(b); }
+}
+
+// ── Guide Media ───────────────────────────────────────────────────────────────
+(function(){
+  const DB_NAME='MAX_SHOP_GUIDE_MEDIA', STORE='media';
+  const CATEGORIES=[
+    { id:'steam',     label:'Steam Account & Codes' },
+    { id:'rockstar',  label:'Rockstar Account & Codes' },
+    { id:'discord',   label:'Discord Guide' },
+    { id:'generator', label:'Generator Guide' },
+  ];
+  const KINDS=['video','picture'];
+
+  function openDB(){
+    return new Promise((res,rej)=>{
+      const req=indexedDB.open(DB_NAME,1);
+      req.onupgradeneeded=()=>{ if(!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE,{keyPath:'id'}); };
+      req.onsuccess=()=>res(req.result);
+      req.onerror=()=>rej(req.error);
+    });
+  }
+  async function getMedia(id){ const db=await openDB(); return new Promise((res,rej)=>{ const r=db.transaction(STORE,'readonly').objectStore(STORE).get(id); r.onsuccess=()=>{db.close();res(r.result||null);}; r.onerror=()=>{db.close();rej(r.error);}; }); }
+  async function putMedia(id,blob,mime){ const db=await openDB(); return new Promise((res,rej)=>{ const r=db.transaction(STORE,'readwrite').objectStore(STORE).put({id,blob,mime,updatedAt:new Date().toISOString()}); r.onsuccess=()=>{db.close();res();}; r.onerror=()=>{db.close();rej(r.error);}; }); }
+  async function delMedia(id){ const db=await openDB(); return new Promise((res,rej)=>{ const r=db.transaction(STORE,'readwrite').objectStore(STORE).delete(id); r.onsuccess=()=>{db.close();res();}; r.onerror=()=>{db.close();rej(r.error);}; }); }
+
+  async function buildSlot(cat, kind){
+    const id=cat.id+':'+kind;
+    const slot=document.createElement('div');
+    slot.style.cssText='background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:.6rem';
+
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:.5rem';
+    const title=document.createElement('div');
+    title.style.cssText='font-size:.78rem;font-weight:700';
+    title.textContent=cat.label;
+    const badge=document.createElement('span');
+    badge.style.cssText='font-size:.58rem;font-weight:800;padding:.1rem .42rem;border-radius:4px;background:rgba(255,255,255,.08);letter-spacing:.08em;text-transform:uppercase';
+    badge.textContent=kind;
+    hdr.append(title,badge);
+
+    // preview area
+    const preview=document.createElement('div');
+    preview.style.cssText='min-height:80px;background:#050506;border:1px dashed var(--border);border-radius:8px;overflow:hidden;display:grid;place-items:center';
+
+    // status line
+    const status=document.createElement('div');
+    status.style.cssText='font-size:.65rem;color:var(--muted)';
+
+    // load existing
+    let existingUrl=null;
+    async function refreshPreview(){
+      if(existingUrl){ URL.revokeObjectURL(existingUrl); existingUrl=null; }
+      preview.innerHTML='';
+      const rec=await getMedia(id).catch(()=>null);
+      if(rec && rec.blob){
+        existingUrl=URL.createObjectURL(rec.blob);
+        const updated=new Date(rec.updatedAt).toLocaleString();
+        status.textContent='Uploaded · '+updated+' · '+(rec.blob.size/1024/1024).toFixed(1)+'MB';
+        if(kind==='video'){
+          const v=document.createElement('video'); v.src=existingUrl; v.controls=true; v.muted=true; v.playsInline=true; v.style.cssText='max-width:100%;max-height:120px;display:block'; preview.append(v);
+        } else {
+          const img=document.createElement('img'); img.src=existingUrl; img.alt='preview'; img.style.cssText='max-width:100%;max-height:120px;object-fit:contain;display:block'; preview.append(img);
+        }
+      } else {
+        const em=document.createElement('div'); em.style.cssText='font-size:.72rem;color:var(--muted);padding:1rem'; em.textContent='No '+kind+' uploaded yet'; preview.append(em);
+        status.textContent='Empty';
+      }
+    }
+    await refreshPreview();
+
+    // file input
+    const fileInp=document.createElement('input');
+    fileInp.type='file';
+    fileInp.accept=kind==='video'?'video/*':'image/*';
+    fileInp.style.display='none';
+    fileInp.addEventListener('change', async()=>{
+      const file=fileInp.files[0]; if(!file) return;
+      const uploadBtn=slot.querySelector('.guide-upload-btn');
+      uploadBtn.disabled=true; uploadBtn.textContent='Saving…';
+      try{
+        await putMedia(id, file, file.type);
+        await refreshPreview();
+        toast('Saved: '+cat.label+' '+kind);
+      }catch(e){ toast('Error: '+e.message||String(e)); }
+      finally{ uploadBtn.disabled=false; uploadBtn.textContent='Upload '+kind; fileInp.value=''; }
+    });
+
+    // buttons
+    const btnRow=document.createElement('div'); btnRow.style.cssText='display:flex;gap:.45rem';
+    const upBtn=document.createElement('button');
+    upBtn.className='btn btn-primary guide-upload-btn';
+    upBtn.style.cssText='padding:.42rem .85rem;font-size:.74rem;flex:1';
+    upBtn.textContent='Upload '+kind;
+    upBtn.addEventListener('click',()=>fileInp.click());
+
+    const clrBtn=document.createElement('button');
+    clrBtn.className='btn btn-danger';
+    clrBtn.style.cssText='padding:.42rem .75rem;font-size:.74rem';
+    clrBtn.textContent='Clear';
+    clrBtn.addEventListener('click',async()=>{
+      if(!confirm('Remove '+cat.label+' '+kind+'?'))return;
+      await delMedia(id).catch(()=>{});
+      await refreshPreview();
+      toast('Cleared');
+    });
+
+    btnRow.append(fileInp, upBtn, clrBtn);
+    slot.append(hdr, preview, status, btnRow);
+    return slot;
+  }
+
+  window.loadGuideTab = async function(){
+    const grid=document.getElementById('guide-slots');
+    grid.innerHTML='<div style="color:var(--muted);font-size:.78rem">Loading…</div>';
+    grid.innerHTML='';
+    for(const cat of CATEGORIES){
+      for(const kind of KINDS){
+        const slot=await buildSlot(cat,kind);
+        grid.appendChild(slot);
+      }
+    }
+  };
+})();
+
+document.getElementById('sl-export-btn').addEventListener('click',()=>{
+  const svc=document.getElementById('sl-service').value;
+  const s=stockList(svc,0,'');
+  // fetch all pages
+  let all=[]; let p=0;
+  while(true){ const r=stockList(svc,p,''); all=[...all,...r.items.map(i=>i.value)]; if(r.items.length<50)break; p++; }
+  if(!all.length){ toast('Nothing to export'); return; }
+  const blob=new Blob([all.join('\n')],{type:'text/plain'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=svc+'_stock.txt'; a.click(); URL.revokeObjectURL(url);
+  toast('Exported '+all.length+' accounts');
+});
+}); // end requireAdmin().then
+</script>
+</body>
+</html>
